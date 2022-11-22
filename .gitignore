@@ -1,0 +1,8 @@
+/ckpt
+/.ipynb_checkpoints
+/outputs
+/latent_diffusion.egg-info
+/ldm/models/
+/ldm/modules/
+/ldm/__pycache__/
+/src
