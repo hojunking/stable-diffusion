@@ -13,6 +13,7 @@ import time
 from pytorch_lightning import seed_everything
 from torch import autocast
 from contextlib import contextmanager, nullcontext
+from googletrans import Translator
 
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
@@ -33,6 +34,14 @@ def chunk(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
 
+def translate(items):
+    output = []
+    translator = Translator()
+    for i, t in enumerate(items):
+        translate = translator.translate(t).text
+        output.append(translate)
+        
+    return output
 
 def numpy_to_pil(images):
     """
@@ -274,6 +283,9 @@ def main():
         print(f"reading prompts from {opt.from_file}")
         with open(opt.from_file, "r") as f:
             data = f.read().splitlines()
+            print(f"before trans :{data}")
+            
+            data = translate(data[0])
             data = list(chunk(data, batch_size))
 
     sample_path = os.path.join(outpath, "samples")
