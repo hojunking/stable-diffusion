@@ -19,6 +19,7 @@ from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
 from ldm.models.diffusion.dpm_solver import DPMSolverSampler
+from torch import nn
 
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from transformers import AutoFeatureExtractor
@@ -37,7 +38,7 @@ def chunk(it, size):
 def translate(items):
     output = []
     translator = Translator()
-    for i, t in enumerate(items):
+    for t in items:
         translate = translator.translate(t).text
         output.append(translate)
         
@@ -196,7 +197,7 @@ def main():
     parser.add_argument(
         "--n_samples",
         type=int,
-        default=3,
+        default=1,
         help="how many samples to produce for each given prompt. A.k.a. batch size",
     )
     parser.add_argument(
@@ -256,7 +257,7 @@ def main():
 
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = model.to(device)
-
+    
     if opt.dpm_solver:
         sampler = DPMSolverSampler(model)
     elif opt.plms:
@@ -266,7 +267,7 @@ def main():
 
     os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
-
+    
     print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
     wm = "StableDiffusionV1"
     wm_encoder = WatermarkEncoder()
@@ -277,7 +278,8 @@ def main():
     if not opt.from_file:
         prompt = opt.prompt
         assert prompt is not None
-        data = [batch_size * [prompt]]
+        
+        data = [batch_size * translate([prompt])]
 
     else:
         print(f"reading prompts from {opt.from_file}")
@@ -285,7 +287,8 @@ def main():
             data = f.read().splitlines()
             print(f"before trans :{data}")
             
-            data = translate(data[0])
+            data = translate(data)
+            print(f"after trans :{data}")
             data = list(chunk(data, batch_size))
 
     sample_path = os.path.join(outpath, "samples")
