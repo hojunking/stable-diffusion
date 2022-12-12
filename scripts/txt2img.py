@@ -39,8 +39,8 @@ def translate(items):
     output = []
     translator = Translator()
     for t in items:
-        translate = translator.translate(t).text
-        output.append(translate)
+        translated = translator.translate(t).text
+        output.append(translated)
         
     return output
 
