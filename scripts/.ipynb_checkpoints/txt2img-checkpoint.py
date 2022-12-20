@@ -39,8 +39,8 @@ def translate(items):
     output = []
     translator = Translator()
     for t in items:
-        translate = translator.translate(t).text
-        output.append(translate)
+        translated = translator.translate(t).text
+        output.append(translated)
         
     return output
 
@@ -120,7 +120,9 @@ def main():
         type=str,
         nargs="?",
         help="dir to write results to",
-        default="outputs/txt2img-samples"
+        #default="outputs/txt2img-samples"
+        ##
+        default="outputs"
     )
     parser.add_argument(
         "--skip_grid",
@@ -284,12 +286,12 @@ def main():
     else:
         print(f"reading prompts from {opt.from_file}")
         with open(opt.from_file, "r") as f:
-            data = f.read().splitlines()
-            print(f"before trans :{data}")
+            before_trans = f.read().splitlines()
+            print(f"before trans :{before_trans}")
             
-            data = translate(data)
-            print(f"after trans :{data}")
-            data = list(chunk(data, batch_size))
+            after_trans = translate(before_trans)
+            print(f"after trans :{after_trans}")
+            data = list(chunk(after_trans, batch_size))
 
     sample_path = os.path.join(outpath, "samples")
     os.makedirs(sample_path, exist_ok=True)
@@ -306,8 +308,14 @@ def main():
             with model.ema_scope():
                 tic = time.time()
                 all_samples = list()
+                ##
+                iter_cnt = -1
                 for n in trange(opt.n_iter, desc="Sampling"):
+                    ##
+                    base_count = 0
+                    iter_cnt +=1
                     for prompts in tqdm(data, desc="data"):
+                       
                         uc = None
                         if opt.scale != 1.0:
                             uc = model.get_learned_conditioning(batch_size * [""])
@@ -338,7 +346,13 @@ def main():
                                 x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                                 img = Image.fromarray(x_sample.astype(np.uint8))
                                 img = put_watermark(img, wm_encoder)
-                                img.save(os.path.join(sample_path, f"{base_count:05}.png"))
+                                #img.save(os.path.join(sample_path, f"{base_count:05}.png")) #origin
+                                ##
+                                #img.save(os.path.join(sample_path, f"{before_trans[base_count]}_{after_trans[base_count]}_{iter_cnt:02}.png"))
+                                
+                                img.save(os.path.join(sample_path, f"{before_trans[base_count]}_{iter_cnt:02}.png"))
+                                
+                                
                                 base_count += 1
 
                         if not opt.skip_grid:
