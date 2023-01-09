@@ -286,11 +286,20 @@ def main():
     else:
         print(f"reading prompts from {opt.from_file}")
         with open(opt.from_file, "r") as f:
-            before_trans = f.read().splitlines()
-            print(f"before trans :{before_trans}")
+            ##
+            #before_trans = f.read().splitlines()
+            f_str = f.read()
             
-            after_trans = translate(before_trans)
-            print(f"after trans :{after_trans}")
+            
+            s_str = f_str.split(',')
+            before_trans = [s_str[i].strip(" '") for i in range(len(s_str))]
+           
+            #after_trans = translate(before_trans)
+            print(f"before trans :{before_trans}")
+            after_trans = before_trans
+            #print(f"after trans :{after_trans}")
+            
+            
             data = list(chunk(after_trans, batch_size))
 
     sample_path = os.path.join(outpath, "samples")
